@@ -2,31 +2,18 @@
 
 namespace App\Services;
 
+use App\Traits\AuthorizesMarketRequest;
 use App\Traits\ComsumesExternalServices;
+use App\Traits\InteractsWithMarketService;
 
 class MarketService
 {
-    use ComsumesExternalServices;
+    use ComsumesExternalServices, InteractsWithMarketService, AuthorizesMarketRequest;
 
     protected $baseUri;
 
     public function __construct()
     {
         $this->baseUri = config('services.market.base_uri');
-    }
-
-    public function resolveAuthorization(&$queryParams, &$formParams, &$headers)
-    {
-
-    }
-
-    public function decodeResponse($response)
-    {
-
-    }
-
-    public function checkIfErrorResponse($response)
-    {
-
     }
 }
