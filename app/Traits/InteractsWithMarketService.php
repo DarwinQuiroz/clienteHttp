@@ -2,7 +2,7 @@
 
 namespace App\Traits;
 
-class InteractsWithMarketService
+trait InteractsWithMarketService
 {
     public function decodeResponse($response)
     {

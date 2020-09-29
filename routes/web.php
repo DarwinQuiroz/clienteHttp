@@ -19,3 +19,7 @@ Route::get('/', 'WelcomeController@showWelcomePage')->name('welcome');
 Auth::routes(['register' => false, 'reset' => false]);
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('products/{title}-{id}', 'ProductController@showProduct')->name('products.show');
+
+Route::get('categories/{title}-{id}/products', 'CategoryProductController@showProductsCategory')->name('categories.products.show');

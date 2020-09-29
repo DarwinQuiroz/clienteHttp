@@ -4,7 +4,7 @@ namespace App\Traits;
 
 use GuzzleHttp\Client;
 
-class ComsumesExternalServices
+trait ComsumesExternalServices
 {
     public function makeRequest($method, $requestUrl, $queryParams = [], $formParams = [], $headers = [])
     {
@@ -19,7 +19,7 @@ class ComsumesExternalServices
 
         $response = $client->request($method, $requestUrl, [
             'query' => $queryParams,
-            'form_paramas' => $formParams,
+            'form_params' => $formParams,
             'headers' => $headers
         ]);
 
