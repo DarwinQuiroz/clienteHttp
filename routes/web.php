@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', 'WelcomeController@showWelcomePage')->name('welcome');
+Route::get('/authorization', 'Auth\LoginController@authorization')->name('authorization');
 
 Auth::routes(['register' => false, 'reset' => false]);
 

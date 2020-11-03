@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers\Auth;
 
+use Illuminate\Http\Request;
+use App\Services\MarketService;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
+use App\Services\MarketAuthenticationService;
+use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
@@ -28,13 +33,54 @@ class LoginController extends Controller
      */
     protected $redirectTo = RouteServiceProvider::HOME;
 
+    protected $marketAuthenticationService;
+
     /**
      * Create a new controller instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(MarketAuthenticationService $marketAuthenticationService, MarketService $marketService)
     {
         $this->middleware('guest')->except('logout');
+        $this->marketAuthenticationService = $marketAuthenticationService;
+        parent::__construct($marketService);
+    }
+
+    public function showLoginForm()
+    {
+        $authorizationUrl = $this->marketAuthenticationService->resolveAuthorizationUrl();
+        return view('auth.login')->with(['authorizationUrl' => $authorizationUrl]);
+    }
+
+    public function authorization(Request $request)
+    {
+        if($request->has('code'))
+        {
+            $tokenData = $this->marketAuthenticationService->getCodeToken($request->code);
+            $userData = $this->marketService->getUserInformation();
+
+            $user = $this->registerOrUpdateUser($userData, $tokenData);
+            $this->loginUser($user);
+            return redirect()->intended('home');
+        }
+
+        return redirect()->route('login')->withErrors(['Has cancelado el proceso de autorización']);
+    }
+
+    public function registerOrUpdateUser($userData, $tokenData)
+    {
+        return User::updateOrCreate(['service_id' => $userData->identifier], [
+            'grant_type' => $tokenData->grant_type,
+            'access_token' => $tokenData->access_token,
+            'refresh_token' => $tokenData->refresh_token,
+            'token_expires_at' => $tokenData->token_expires_at
+        ]);
+    }
+
+    public function loginUser(User $user, $remember = true)
+    {
+        Auth::login($user, $remember);
+        session()->regenerate();
     }
 }

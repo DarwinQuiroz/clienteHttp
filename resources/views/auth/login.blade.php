@@ -57,7 +57,7 @@
                                     {{ __('Login') }}
                                 </button>
 
-                                <a href="#" class="btn btn-success">Conéctate con la API</a>
+                                <a href="{{ $authorizationUrl }}" class="btn btn-success">Conéctate con la API</a>
 
                                 @if (Route::has('password.request'))
                                     <a class="btn btn-link" href="{{ route('password.request') }}">
