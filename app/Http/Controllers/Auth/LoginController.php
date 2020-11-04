@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\User;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Services\MarketService;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
+use GuzzleHttp\Exception\ClientException;
 use App\Services\MarketAuthenticationService;
-use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
@@ -66,6 +68,41 @@ class LoginController extends Controller
         }
 
         return redirect()->route('login')->withErrors(['Has cancelado el proceso de autorización']);
+    }
+
+    public function login(Request $request)
+    {
+        $this->validateLogin($request);
+
+        if (method_exists($this, 'hasTooManyLoginAttempts') &&
+            $this->hasTooManyLoginAttempts($request)) {
+            $this->fireLockoutEvent($request);
+
+            return $this->sendLockoutResponse($request);
+        }
+
+        try
+        {
+            $tokenData = $this->marketAuthenticationService->getPasswordToken($request->email, $request->password);
+            $userData = $this->marketService->getUserInformation();
+
+            $user = $this->registerOrUpdateUser($userData, $tokenData);
+            $this->loginUser($user, $request->has('remember'));
+            return redirect()->intended('home');
+        }
+        catch (ClientException $ex)
+        {
+            $message = $ex->getResponse()->getBody();
+            // dd($ex->getMessage());
+            if(Str::contains($message, 'invalid_credentials'))
+            {
+                $this->incrementLoginAttempts($request);
+                return $this->sendFailedLoginResponse($request);
+            }
+
+            // throw $ex;
+        }
+
     }
 
     public function registerOrUpdateUser($userData, $tokenData)
