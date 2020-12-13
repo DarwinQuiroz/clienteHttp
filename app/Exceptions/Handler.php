@@ -3,7 +3,10 @@
 namespace App\Exceptions;
 
 use Exception;
+use GuzzleHttp\Exception\ClientException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 
 class Handler extends ExceptionHandler
 {
@@ -50,6 +53,37 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        if($exception instanceof ClientException)
+        {
+            return $this->handleClientException($exception, $request);
+        }
+
         return parent::render($request, $exception);
+    }
+
+    protected function handleClientException(ClientException $exception, $request)
+    {
+        $code = $exception->getCode();
+        $response = json_decode($exception->getResponse()->getBody()->getContents());
+        $errorMessage = $response->error;
+
+        switch($code)
+        {
+            case Response::HTTP_UNAUTHORIZED:
+                $request->session()->invalidate();
+
+                if($request->user())
+                {
+                    Auth::logout();
+                    return redirect()->route('welcome')
+                    ->withErrors(['message' => 'La autenticación falló, por favor inicie sesión de nuevo.']);
+                }
+
+                abort(500, 'La autenticación falló, por favor intente de nuevo.');
+                // throw new \Exception('La autenticación falló, por favor intente de nuevo.', 0, $exception);
+            default:
+                return back()->withErrors(['message' => $errorMessage]);
+            break;
+        }
     }
 }
