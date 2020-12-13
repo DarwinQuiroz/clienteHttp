@@ -30,11 +30,19 @@ class HomeController extends Controller
 
     public function showPurchases(Request $request)
     {
-        return view('home');
+        $purchases = $this->marketService->getPurchases($request->user()->service_id);
+
+        return view('purchases', [
+            'purchases' => $purchases
+        ]);
     }
 
     public function showProducts(Request $request)
     {
-        return view('home');
+        $publications = $this->marketService->getPublications($request->user()->service_id);
+
+        return view('publications', [
+            'publications' => $publications
+        ]);
     }
 }
